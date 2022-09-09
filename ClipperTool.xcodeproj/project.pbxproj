@@ -16,7 +16,6 @@
 		C8338AD028BBF89B001D7E94 /* Clip+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8338ACE28BBF89B001D7E94 /* Clip+CoreDataClass.swift */; };
 		C8338AD128BBF89B001D7E94 /* Clip+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8338ACF28BBF89B001D7E94 /* Clip+CoreDataProperties.swift */; };
 		C8338AD528BBF99F001D7E94 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8338AD428BBF99F001D7E94 /* AppDelegate.swift */; };
-		C8338AD728BBFA2F001D7E94 /* PopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8338AD628BBFA2F001D7E94 /* PopoverView.swift */; };
 		C8338AD928BBFAB1001D7E94 /* StatusBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8338AD828BBFAB1001D7E94 /* StatusBarController.swift */; };
 		C8C32BBF28C44CE8006C22B9 /* HotKey.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C8C32BBE28C44CE8006C22B9 /* HotKey.xcframework */; };
 		C8C32BC028C44CE8006C22B9 /* HotKey.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C8C32BBE28C44CE8006C22B9 /* HotKey.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -48,7 +47,6 @@
 		C8338ACE28BBF89B001D7E94 /* Clip+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Clip+CoreDataClass.swift"; sourceTree = "<group>"; };
 		C8338ACF28BBF89B001D7E94 /* Clip+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Clip+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		C8338AD428BBF99F001D7E94 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		C8338AD628BBFA2F001D7E94 /* PopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverView.swift; sourceTree = "<group>"; };
 		C8338AD828BBFAB1001D7E94 /* StatusBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarController.swift; sourceTree = "<group>"; };
 		C8C32BBE28C44CE8006C22B9 /* HotKey.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = HotKey.xcframework; path = Carthage/Build/HotKey.xcframework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -89,7 +87,6 @@
 				C8338AD228BBF8C9001D7E94 /* Data */,
 				C8338ABA28BBE2D6001D7E94 /* ClipperToolApp.swift */,
 				C8338ABC28BBE2D6001D7E94 /* ContentView.swift */,
-				C8338AD628BBFA2F001D7E94 /* PopoverView.swift */,
 				C8338ABE28BBE2D8001D7E94 /* Assets.xcassets */,
 				C8338AC828BBE2D8001D7E94 /* ClipperTool.entitlements */,
 				C8338AC028BBE2D8001D7E94 /* Preview Content */,
@@ -206,7 +203,6 @@
 			files = (
 				C8338AC428BBE2D8001D7E94 /* Persistence.swift in Sources */,
 				C8338AD128BBF89B001D7E94 /* Clip+CoreDataProperties.swift in Sources */,
-				C8338AD728BBFA2F001D7E94 /* PopoverView.swift in Sources */,
 				C8338AC728BBE2D8001D7E94 /* ClipperTool.xcdatamodeld in Sources */,
 				C8338AD928BBFAB1001D7E94 /* StatusBarController.swift in Sources */,
 				C8338ABD28BBE2D6001D7E94 /* ContentView.swift in Sources */,

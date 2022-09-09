@@ -12,9 +12,7 @@ import HotKey
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     
-    static var popover = NSPopover()
     var menu = NSMenu()
-    var statusBar: StatusBarController?
     var timer: Timer!
     let pasteboard: NSPasteboard = .general
     var lastChangeCount: Int = 0
@@ -29,10 +27,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         
-        Self.popover.contentViewController = NSHostingController(rootView: PopoverView().environment(\.managedObjectContext, PersistenceController.shared.container.viewContext).environmentObject(clips))
-        Self.popover.behavior = .transient
-        
-        statusBar = StatusBarController(Self.popover)
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         statusItem.menu = self.menu
         if let button = statusItem.button {
@@ -46,15 +40,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc func didTap(_ sender: NSMenuItem) {
-        self.hotKeyCommand(i: sender.tag)
+        self.hotKeyCommandData(i: sender.tag)
     }
     
     func setupMenu() {
         for i in 0 ..< self.clips.clips.count {
-            let menuItem = NSMenuItem(title: limitStringLength(self.clips.clips[i]), action: #selector(didTap), keyEquivalent: self.keys[i])
+            let menuItem = NSMenuItem(title: limitStringLength(self.clips.clipDescriptions[i]), action: #selector(didTap), keyEquivalent: self.keys[i])
             menuItem.tag = i
             menuItem.keyEquivalentModifierMask = [.control, .command];
-            if self.clips.clips[i].isEmpty {
+            if self.clips.clipFirstTime[i] {
                 menuItem.isHidden = true
             }
             else {
@@ -67,11 +61,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         self.menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
     }
-    
+
     func refreshMenu(){
         for i in 0 ..< self.clips.clips.count {
-            self.menu.item(at: i)?.title = limitStringLength(self.clips.clips[i])
-            if self.clips.clips[i].isEmpty {
+            self.menu.item(at: i)?.title = limitStringLength(self.clips.clipDescriptions[i])
+            if self.clips.clipFirstTime[i] {
                 self.menu.item(at: i)?.isHidden = true
             }
             else {
@@ -89,24 +83,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     
-    // MARK: - Core Data stack
-    static var persistentContainer: NSPersistentContainer = {
-        let container = NSPersistentContainer(name: "ClipperTool")
-        container.loadPersistentStores(completionHandler: { (storeDescription, error) in
-            if let error = error as NSError? {
-                fatalError("Unresolved error \(error), \(error.userInfo)")
-            }
-        })
-        return container
-    }()
-    
     func applicationWillTerminate(_ notification: Notification) {
         // Insert code here to tear down your application
         timer.invalidate()
-    }
-    
-    var context: NSManagedObjectContext {
-        return Self.persistentContainer.viewContext
     }
     
     func readClipboard(){
@@ -118,25 +97,35 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             else {
                 guard let items = self.pasteboard.pasteboardItems else {return}
                 guard let item = items.first else {return}
-                let pastedType = item.availableType(from: [.fileURL, .string, .URL, .multipleTextSelection, .pdf, .png])
-                print(item.types)
-                //print(pastedType)
-                self.saveClip(pasted: item)
+                let itemDescription = item.string(forType: .string) ?? "(No Description Available)"
+                var pasteType = item.types.first!
+                if item.types.contains(NSPasteboard.PasteboardType(rawValue: "public.jpeg")) {
+                    pasteType = NSPasteboard.PasteboardType(rawValue: "public.jpeg")
+                }
+                self.saveClipAsData(pasteData: self.pasteboard.data(forType: item.types.first!)!, pasteType: pasteType, pasteDescription: itemDescription)
+                //self.saveClip(pasted: item)
             }
         }
     }
     
-    func saveClip(pasted: NSPasteboardItem) {
-        self.clips.append(pasted: pasted)
+    func saveClipAsData(pasteData: Data, pasteType: NSPasteboard.PasteboardType, pasteDescription: String){
+        self.clips.appendData(pasteData: pasteData, pasteType: pasteType, pasteDescription: pasteDescription)
         self.refreshMenu()
     }
+    
+    
+//    func saveClip(pasted: NSPasteboardItem) {
+//        self.clips.append(pasted: pasted)
+//        self.refreshMenu()
+//    }
     
     func hotkeyMappers() {
         for i in 0...4 {
             self.hotKeys[i].keyDownHandler = {
                 if self.clips.clips.count >= i + 1 {
-                    print("\(self.clips.clips[i])\n")
-                    self.hotKeyCommand(i: i)
+//                    print("\(self.clips.clips[i])\n")
+//                    self.hotKeyCommand(i: i)
+                    self.hotKeyCommandData(i: i)
                 }
                 else {
                     print("Nothing to paste.")
@@ -146,25 +135,41 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return
     }
     
-    func hotKeyCommand(i: Int) {
-        let _ = self.setTempClipboard(i:i)
+    func hotKeyCommandData(i: Int){
+        let _ = self.setDataToClipboard(i: i)
         Task {
             await self.simulatePaste()
         }
-        //self.resetClipboardToOriginal(tempClipString: tempString)
     }
     
-    func setTempClipboard(i: Int) -> String {
+//    func hotKeyCommand(i: Int) {
+//        let _ = self.setTempClipboard(i:i)
+//        Task {
+//            await self.simulatePaste()
+//        }
+//        self.resetClipboardToOriginal(tempClipString: tempString)
+//    }
+    
+    func setDataToClipboard(i: Int) {
+        print(self.clips.clips)
+        print(self.clips.clipTypes)
         self.internallyChanged = true
-        var tempClip: NSPasteboardItem
-        tempClip = (self.pasteboard.pasteboardItems?.first)!
-        let tempClipString = tempClip.string(forType: .string)!
         self.pasteboard.clearContents()
-        self.pasteboard.setString(self.clips.clips[i], forType: .string)
-        return tempClipString
+        self.pasteboard.setData(self.clips.clips[i], forType: self.clips.clipTypes[i])
     }
     
-    func simulatePaste() async -> String {
+    
+//    func setTempClipboard(i: Int) -> String {
+//        self.internallyChanged = true
+//        var tempClip: NSPasteboardItem
+//        tempClip = (self.pasteboard.pasteboardItems?.first)!
+//        let tempClipString = tempClip.string(forType: .string)!
+//        self.pasteboard.clearContents()
+//        self.pasteboard.setString(self.clips.clips[i], forType: .string)
+//        return tempClipString
+//    }
+    
+    func simulatePaste() async {
         let src = CGEventSource(stateID: .privateState)
 
         let cmdd = CGEvent(keyboardEventSource: src, virtualKey: 0x38, keyDown: true)
@@ -180,8 +185,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         vd?.post(tap: loc)
         vu?.post(tap: loc)
         cmdu?.post(tap: loc)
-        
-        return "Completed paste."
     }
     
     func resetClipboardToOriginal(tempClipString: String) {
@@ -192,13 +195,32 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 class Clips: ObservableObject {
-    @Published var clips = ["","","","",""]
+    //@Published var clips = ["","","","",""]
+    @Published var clips = [Data(), Data(), Data(), Data(), Data()]
+    @Published var clipTypes = [NSPasteboard.PasteboardType.string,NSPasteboard.PasteboardType.string,NSPasteboard.PasteboardType.string,NSPasteboard.PasteboardType.string,NSPasteboard.PasteboardType.string]
+    @Published var clipDescriptions = ["", "", "", "", ""]
+    @Published var clipFirstTime = [true,true,true,true,true]
+//    func append(pasted: NSPasteboardItem){
+//        guard let newPastedData = pasted.string(forType: .string) else {return}
+//        if newPastedData.isEmpty {
+//            return
+//        }
+//        if self.clips.count == 5 {
+//            self.clips.removeLast()
+//        }
+//        self.clips.insert(newPastedData, at: 0)
+//    }
     
-    func append(pasted: NSPasteboardItem){
-        let newPastedData = pasted.string(forType: .string)!
-        if self.clips.count == 5 {
+    func appendData(pasteData: Data, pasteType: NSPasteboard.PasteboardType, pasteDescription: String){
+        if self.clips.count == 5  {
             self.clips.removeLast()
+            self.clipTypes.removeLast()
+            self.clipDescriptions.removeLast()
+            self.clipFirstTime.removeLast()
         }
-        self.clips.insert(newPastedData, at: 0)
+        self.clips.insert(pasteData, at: 0)
+        self.clipTypes.insert(pasteType, at: 0)
+        self.clipDescriptions.insert(pasteDescription, at: 0)
+        self.clipFirstTime.insert(false, at: 0)
     }
 }
