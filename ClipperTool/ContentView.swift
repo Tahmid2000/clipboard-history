@@ -11,7 +11,21 @@ import CoreData
 struct ContentView: View {
 
     var body: some View {
-        Text("Welcome to Clipper!")
-            .padding(64)
+        Group {
+            Text("Welcome to Clipper!")
+                .bold()
+            Spacer()
+            Text("Version 1.0")
+            Text("Designed by: [Tahmid Imran](https://www.tahmidimran.com)")
+            Spacer()
+            Text("Copyright © 2022 Tahmid Imran")
+                .bold()
+        }
+        .padding(30)
+        .padding([.bottom], 15)
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification), perform: { _ in
+            NSApp.mainWindow?.standardWindowButton(.zoomButton)?.isHidden = true
+            NSApp.mainWindow?.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        })
     }
 }

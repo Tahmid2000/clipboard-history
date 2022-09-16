@@ -11,7 +11,6 @@ import HotKey
 
 
 class AppDelegate: NSObject, NSApplicationDelegate {
-    
     var menu = NSMenu()
     var timer: Timer!
     let pasteboard: NSPasteboard = .general
@@ -22,11 +21,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var internallyChanged = false
     
     
-    private var window: NSWindow!
+    //private var window: NSWindow!
     private var statusItem: NSStatusItem!
     
     func applicationDidFinishLaunching(_ notification: Notification) {
-        
+        if let window = NSApplication.shared.windows.first {
+            window.close()
+        }
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         statusItem.menu = self.menu
         if let button = statusItem.button {
@@ -43,7 +44,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.hotKeyCommandData(i: sender.tag)
     }
     
+    private func newWindowInternal() -> NSWindow {
+            let window = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 680, height: 600),
+                styleMask: [.titled, .closable, .fullSizeContentView],
+                backing: .buffered,
+                defer: false)
+            window.isReleasedWhenClosed = false
+            window.makeKeyAndOrderFront(true)
+            NSApp.activate(ignoringOtherApps: true)
+            window.positionCenter()
+            return window
+        }
+    
+    @objc func openAbout() {
+//        NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
+//        NSApp.activate(ignoringOtherApps: true)
+        self.newWindowInternal().contentView = NSHostingView(rootView: ContentView().fixedSize())
+    }
+    
     func setupMenu() {
+
         for i in 0 ..< self.clips.clips.count {
             let menuItem = NSMenuItem(title: limitStringLength(self.clips.clipDescriptions[i]), action: #selector(didTap), keyEquivalent: self.keys[i])
             menuItem.tag = i
@@ -58,7 +79,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         self.menu.addItem(NSMenuItem.separator())
-
+        self.menu.addItem(NSMenuItem(title: "About", action: #selector(openAbout), keyEquivalent: ""))
         self.menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
     }
 
@@ -223,4 +244,38 @@ class Clips: ObservableObject {
         self.clipDescriptions.insert(pasteDescription, at: 0)
         self.clipFirstTime.insert(false, at: 0)
     }
+}
+
+
+extension NSWindow {
+    
+    /// Positions the `NSWindow` at the horizontal-vertical center of the `visibleFrame` (takes Status Bar and Dock sizes into account)
+    public func positionCenter() {
+        if let screenSize = screen?.visibleFrame.size {
+            self.setFrameOrigin(NSPoint(x: (screenSize.width-frame.size.width)/2, y: (screenSize.height-frame.size.height)/2))
+        }
+    }
+    /// Centers the window within the `visibleFrame`, and sizes it with the width-by-height dimensions provided.
+    public func setCenterFrame(width: Int, height: Int) {
+        if let screenSize = screen?.visibleFrame.size {
+            let x = (screenSize.width-frame.size.width)/2
+            let y = (screenSize.height-frame.size.height)/2
+            self.setFrame(NSRect(x: x, y: y, width: CGFloat(width), height: CGFloat(height)), display: true)
+        }
+    }
+    /// Returns the center x-point of the `screen.visibleFrame` (the frame between the Status Bar and Dock).
+    /// Falls back on `screen.frame` when `.visibleFrame` is unavailable (includes Status Bar and Dock).
+    public func xCenter() -> CGFloat {
+        if let screenSize = screen?.visibleFrame.size { return (screenSize.width-frame.size.width)/2 }
+        if let screenSize = screen?.frame.size { return (screenSize.width-frame.size.width)/2 }
+        return CGFloat(0)
+    }
+    /// Returns the center y-point of the `screen.visibleFrame` (the frame between the Status Bar and Dock).
+    /// Falls back on `screen.frame` when `.visibleFrame` is unavailable (includes Status Bar and Dock).
+    public func yCenter() -> CGFloat {
+        if let screenSize = screen?.visibleFrame.size { return (screenSize.height-frame.size.height)/2 }
+        if let screenSize = screen?.frame.size { return (screenSize.height-frame.size.height)/2 }
+        return CGFloat(0)
+    }
+
 }

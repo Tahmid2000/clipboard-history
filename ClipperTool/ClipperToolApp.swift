@@ -14,8 +14,9 @@ struct ClipperToolApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .fixedSize()
         }
-    
+        .windowStyle(HiddenTitleBarWindowStyle())
     }
 }
 
